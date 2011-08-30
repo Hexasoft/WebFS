@@ -119,12 +119,24 @@ mylog("::load_metadata()\n");
     set_message("Failed to create local metadata file (check /tmp).");
     return(0);
   }
-  if (!wget_meta(metaurl, f)) {
+  
+  if (metaurl[0] == '@') {
+    /* user ask for a local program to update file */
+    /* run it with "system". may change */
+    if (system(metaurl+1) != 0) {
+      update_ok = UP_404; /* fail. same error than 404 */
+      set_message("Failed to execute updater program for metadata.");
+      return(0);
+    }
+  } else {
+    /* we just dl the metadata file from website */
+    if (!wget_meta(metaurl, f)) {
+      fclose(f);
+      update_ok = UP_404;
+      return(0);
+    }
     fclose(f);
-    update_ok = UP_404;
-    return(0);
   }
-  fclose(f);
   
   /* now check for timestamp value */
   f = fopen(tpl, "r");
@@ -947,8 +959,14 @@ int main(int argc, char *argv[])
     }
     /* build URL of metadata */
     metaurl[0] = '\0';
-    strcat(metaurl, wget_encode(url_path, url_metadata));
+    /* special case: if url_metadata starts by @ it is the
+       name of the program to use to update the code */
+    if (url_metadata[0] == '@') {
+      strcat(metaurl, url_metadata);
+    } else {
+      strcat(metaurl, wget_encode(url_path, url_metadata));
 printf("### metaurl='%s'\n", metaurl);
+    }
     if (!load_metadata()) {
       fprintf(stderr, "Failed to download metadata file.\n");
       exit(5);
