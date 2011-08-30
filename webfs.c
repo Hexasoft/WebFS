@@ -943,6 +943,16 @@ int main(int argc, char *argv[])
       }
     }
 
+    /* check: if using a updater program for metadata file,
+       this one must be set with --metafile */
+    if ((url_metadata[0] == '@')&&(mo.metafile == NULL)) {
+      fprintf(stderr, "Problem: you set a updater program name, but you\n"
+      "did not set a name for the local metafil (--metafile option), so\n"
+      "you program has no way to know which file to update.\n"
+      "Abort.\n");
+      exit(8);
+    }
+
     /* temp file to get the metadata for filesystem */
     /* does user gives a metafile name? */
     tpl[0] = '\0';
