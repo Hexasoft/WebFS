@@ -1,0 +1,126 @@
+WebFS uses a metadata file on the web server to know the files/dirs
+present in the exported filesystem.
+
+At this time, this file must be named 'description.data' and must be
+in the root directory of the exported HTTP tree (this should become
+an option later).
+
+
+This file is a *unix* text file. No empty lines (here empty lines are
+  only present because of description text) :
+<update timestamp>        : the unix date for this file. Used by
+                            WebFS to check if filesystem should be
+			    updated
+<# entries>               : total number of entries (dirs + files) in
+  			    the filesystem. A bad value can lead to crash
+After that a "block" per entry. The first entry *must* be the "/" of
+  the filesystem.
+Note that for "/" entry several field are ignored (such as the name (always
+"/"), the mode (always 755)...).
+Also note that entries must be in a suitable order: you should always give
+  a directory entry *before* giving a subdirectory or a file that is
+  inside it (entries are created as they are read).
+  i.e. you can describe 'foo', then 'foo/bar', then 'foo/bar/myfile', but
+  it will failed if you start by 'foo/bar' before describing 'foo'.
+
+Format of entry block:
+<type> <size> <inode> <timestamp> <links> <mode>
+<full entry name without initial />
+
+size: size in bytes of the dir / file. For dirs size is not really
+      important, and is 4096 most of the time.
+inode: the inode number of the entry. Must be uniq in the filesystem.
+timestamp: unix time for the file (atime, ctime and mtime are the same
+           in webfs).
+links: number of hard links for the entry
+mode: unix mode (in octal) for the entry (i.e. '644').
+full entry name: the entry name, without initial '/'. i.e. 'foo/bar/myfile'
+
+type: this one is more complex. Basic types are '0' for directories, and
+      '1' for files. Note that it is important: webfs makes some sanity
+      check when building FS tree, and can failed on some malformed cases
+      (such as a file used as a directory).
+      Other valid 'type' value is '2', which means that the entry is a
+      symbolic link (and so a file). In this case the entry format is
+      a little different: after the name you have to add the target of
+      the symbolic link (as it will be shown by stat/ls). The file size
+      must be the exact length of the target (this sould be automaticaly
+      computed in future).
+      At last 'type' values > 100 have special mean. They describe files
+      with dynamicaly generated content.
+      Existing values are:
+      101: file content is the local time (useless, no?)
+      102: file content is the status of WebFS client
+      103: file content is WebFS connection data (URL, metafile...)
+      104: file content is WebFS general informations
+      105: file content is WebFS usage stats (number of open/read/...)
+      Please note that due to some FUSE constrains you must give a file
+      size that is at least the (unknown...) content size, else content
+      will be truncated. This is a FUSE limitation that I can't solve.
+
+
+A simple way to build metadata file can be to use filesystem data
+from you HTTP tree.
+From within the root of you HTTP tree (and under unix/linux...) do:
+>>>
+# get current unix date
+date +%s
+# get number of entries
+find . | wc -l
+# for each dir/file, in a suitable order
+find . | while read E
+do
+  # remove leading './'
+  N=`echo "$E" | sed -e "s,^./,,"`
+  # check for file or directory status
+  if [ -d "$E" ]
+  then
+    FILE=0
+  else
+    FILE=1
+  fi
+
+  # use 'stat' to get all needed informations on entry
+  TMP=`stat -c "%Y %s %i %h %a" "$E"`
+  
+  # extract each part of the stat
+  MODIF=`echo "$TMP" | cut -d" " -f1`
+  SIZE=`echo "$TMP" | cut -d" " -f2`
+  INODE=`echo "$TMP" | cut -d" " -f3`
+  LINK=`echo "$TMP" | cut -d" " -f4`
+  MODE=`echo "$TMP" | cut -d" " -f5`
+  
+  # print the definition of the entry
+  echo "$FILE $SIZE $INODE $MODIF $LINK $MODE"
+  # print the name of the entry
+  echo "$N"
+
+done
+<<<
+
+The output of this small script should be fine.
+Please note that this script will not handle symbolic links.
+If you want to add 'special' files, just add them by hand.
+For symlinks you may check them:
+if [ -L "$E" ]
+then
+  # this is a symlink, check for target name
+  TARGET=`stat -c "%N" "$E" | cut -d">" -f2- | cut -c3- | sed -e "s/.$//"`
+  TSIZE=`printf "$TARGET" | wc -c`
+else
+  TARGET=""
+  TSIZE=0
+fi
+
+With this, you will be able to modify the final "echo" in the script.
+If $TARGET is empty just keep current behavior. If not print the same
+but use "$TSIZE" for the size part and '2' instead of $FILE, and add
+an other echo for the target name ($TARGET).
+
+Well, the "TARGET=`...`" line is ugly. 'stat' prints a ` as separator,
+which makes the shell a little bit silly when trying to use it as 'cut'
+separator within a command substitution.
+Feel free to modify :)
+
+
+

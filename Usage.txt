@@ -1,0 +1,38 @@
+To use webfs, you must first:
+- have a configured HTTP server, accessible from your machine
+- have a metadata file accessible at the root of your HTTP tree
+  (see DescriptionFormat.txt for the content of this file)
+- run webfs program:
+webfs -s -r --url <URL> [options] mountpoint
+
+The URL is the "http://you.site.web". Please note that you should
+  not put the final "/" in URL.
+Option "-s" is for "singlethreaded FUSE (mostly sure that webfs
+  will not work with it).
+Option "-r" is for "read-only". This option is not necessary, as
+  readonly is handled by webfs, but it is better to catch "readonly"
+  at lower level.
+
+Option "--metadata <file>" allows to set a different name for the
+  metadata file on server. Default value is /description.data (please
+  note the /).
+
+To unmount filesystem, use 'fusermount -u mountpoint'.
+
+About webfs cache system:
+webfs manage a cache on each opened file. A cache handles the CURL
+  connection to the web server. It also contains parts of the file
+  in local (the "chunks"). Each cache has a special chunk, called
+  "firstblock", that keeps the first "chunksize" bytes of the file.
+  In addition it manage up to "chunks" chunks, each of "chunksize" bytes.
+  When reading a file, the cache system will use data in chunks. If
+  not available, it will create a new chunk (or re-use an existing
+  one (the older one) if all chunks are used) and download "chunksize"
+  bytes in it.
+Options that modify cache system:
+  --chunksize <size in byte> : set the size of each chunk. A chunk can
+    be smaller if no more data is available. Default value: 16090*8
+  --chunks <number of chunks> : set the maximum number of chunks per
+    cached file. This number does not concern the 'firstblock' chunk
+    which always exists. Default value: 1
+

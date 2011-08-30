@@ -1,0 +1,75 @@
+creer un (des) fichier special pour les infos
+
+/.status : etat du FS (0=ok, 1=erreur de MaJ metadata)
+
+/.info : infos sur le FS : URL de base\ntimestamp\nlast_dl\n# entrees\n
+
+/.webfs : infos sur webfs lui-meme (version, auteur...)
+
+
+^ fait.
+
+Ajout de : /.stats : contient les statistiques d'acces aux differents
+    appels systeme internes.
+
+
+Il faut ajouter un texte explicatif de la derniere erreur, a afficher
+dans les statuts.
+-> en cours. Ok (mostly)
+
+
+Fait : ajout d'options pour les donnees de connexion :
+--url=%s : l'URL du site ou se connecter
+--metadata=%s : le nom du fichier de metadata sur le serveur (par rapport
+a la racine, en incluant le /). Valeur par defaut : "/description.data"
+
+
+Dans la section cache / webget : profiter de l'acces initial au fichier
+(dans le open, pour verifier que le fichier existe bien / que la connexion
+http fonctionne) pour charger le premier block de donnees. Ca permet de
+profiter de la connexion etablie pour recuperer quelques data (une sorte de
+lecture preventive :)).
+
+Cette partie est ok. J'ai change la taille du 'firstblock' (utilise la taille
+des blocks chunk). Chargement direct au 'connect' du fichier.
+
+
+
+Ajout : la fonction 'read' de FUSE fait maintenant une boucle jusqu'a remplir
+la taille demandee (sauf si plus rien a lire). Ca permet normalement de ne
+plus avoir a utiliser 'direct_io'.
+Visiblement ca fonctionne.
+
+Plus general : nettoyer le code !
+Il traite du debug, les fonctions sont un peu en vrac, surtout dans webfs.c,
+il manque des commentaires.
+
+Il faut faire une doc potable.
+
+
+
+Modifier la gestion des mises a jour du FS. La fonction doit etre appellee
+dans tous les appels systemes.
+Par contre en cas de mise a jour il faut :
+- noter les caches existants
+- tout detruire
+- effectuer la mise a jour
+- re-creer les caches qui existaient
+
+
+A voir : est-ce que ca marche si il y a plusieurs access en meme temps
+dans le FS ? Je doute. Voir ce que contient la structure FUSE finfo donnee
+avec les access. Peut servir pour gerer des buffers distincts ?
+
+
+Pour le multithread :
+- normalement les fonctions basiques (metadata) n'ont pas besoin de controle.
+- le rafraichissement du contenu est critique : plusieurs en meme temps = boum.
+  il faudrait mettre un lock la-dessus.
+- les fonctions open (peut-etre) et surtout read sont critiques. Derriere
+  il y a des trucs statiques qui vont eclater en multithread. Comment
+  gerer la separation ?
+
+
+
+

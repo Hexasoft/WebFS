@@ -1,0 +1,23 @@
+Trucs a faire pour ameliorer les performances :
+
+- modifier la structure 'tree' pour utiliser la structure utilisee par '[lf]stat',
+  plutot que de reconstruire le contenu.
+
+- prevoir un index global de l'arbre de type 'hash' sur le nom, pour ne pas se taper
+  des recherches lineaires a chaque access (la fonction de recherche est appelee a
+  chaque access, quelque type que ce soit)
+-> hmmm... pas certain. En fait actuellement la recherche est en log(N). La difference (en
+   tout cas sur de petits FS) doit etre minime.
+
+
+- il faudrait des stats d'optimisation sur le profil d'access aux fichiers. Par exemple
+  est-ce que faire du readahead serait interessant ? (si on approche de la "fin" d'un
+  chunk anticiper en demandant directement la creation du chunk suivant...)
+  Pour etre vraiment efficace, il faudrait que ca tourne en tache de fond... donc rendre
+  la main avant.
+  Il pourrait y avoir une option 'readahead'. Reste la question de la tache de fond. Ca
+  necessiterait d'avoir un "demon" qui gere les caches et autres, le programme etant un
+  simple client connecte a ce demon... A voir si ca vaut le coup.
+
+- y-a-t-il des limites aux requetes HTTP (volume, frequence) ? CURL gere-t-il ca tout seul ?
+  sinon il faudrait prevoir des parametres de limitation.
