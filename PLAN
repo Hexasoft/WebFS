@@ -1,0 +1,38 @@
+Things to do, improve, add...
+
+
+* Add certificates management to handle HTTPS servers
+
+I think Riton will work on it.
+
+
+* Add support for "offline" metadata files.
+The idea behind this is to be able to disable webfs current behavior
+which download "description.data" from webserver to get metadata
+informations.
+This is fine for own-controled websites, but not for "any" sites.
+
+The goal is to make webfs just use a localy generated metadata file,
+whitout having to deal with downloading/generating it.
+The goal is also to provide tools that would be able to generate the
+same informations with regular HTTP access for a given site (typicaly
+using HEAD requests to build the files/dirs tree and get the other
+metadata informations).
+
+I think I (Hexasoft) will work on it (at least in webfs code).
+
+
+* Modify code in order to have a separate task for the cache system.
+The goal would be to have a cache system that can receive requests and
+send data to webfs main code, but still behing able to perform some
+tasks in background. The most interested one should be to perfom
+readahead on opened files.
+
+
+* To make a decent documentation
+
+
+* Add a loglevel option at startup, with a syslog output (and not a
+local file as it is now).
+
+
