@@ -123,7 +123,6 @@ int wget_read(Connection *cnx, unsigned int offset, unsigned int size,
               char *dest) {
   char buffer[64];
   CURLcode r;
-  char *cvt = NULL;
 
   /* set data */
   curl_easy_setopt(wget_handler, CURLOPT_URL, cnx->target);
@@ -157,12 +156,11 @@ int wget_read(Connection *cnx, unsigned int offset, unsigned int size,
 int wget_meta(char *url, FILE *f) {
   CURL *tmp;
   CURLcode r;
-  char *cvt = NULL;
-printf("aaa\n");
+
   tmp = curl_easy_init();
   if (tmp == NULL)
     return(0);
-printf("bbb '%s'\n", url);
+
   /* set data */
   /* url *must* be pre-encoded */
   curl_easy_setopt(tmp, CURLOPT_URL, url);
@@ -172,7 +170,6 @@ printf("bbb '%s'\n", url);
 
   r = curl_easy_perform(tmp);
   if (r != CURLE_OK) {
-printf("beuah!\n");
     return(0);
   }
 
@@ -212,7 +209,6 @@ int char_need_convert(const char c) {
 
 char *wget_encode(const char *base, const char *url) {
   static char buffer[8192];
-  char *cvt;
   int i;
   
   buffer[0] = '\0';

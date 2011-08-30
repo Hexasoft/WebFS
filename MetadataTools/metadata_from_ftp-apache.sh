@@ -137,24 +137,50 @@ treat_url() {
 treat_url "$URL" "/"
 
 
-cat "$FILES"
-cleanup
-exit 0
-
-###
-### ALARM! at least the webserver www.kernel.org does not provide
-###        'Content-length' field when replying to a 'HEAD' request
-###        on a (existing) file. So we will not be able to use it...
-### 
-
-# now we have the full files/dirs list, let's extract metadata
-# for each of them
-while read DIR FILE
+INODE=10100
+# now generate content
+# check number of entries
+NBE=`cat "$FILES" | wc -l`
+# +1 for /
+NBE=$(($NBE + 1))
+echo "$NBE" >>"$OUTPUT"
+# the / entry
+echo "0 4096 $INODE 0 5 755" >>"$OUTPUT"
+echo "." >>"$OUTPUT"
+INODE=$(($INODE + 1))
+while read DIR UDATE SIZE PNAME
 do
-  # check for metadata for file $2/$FILE on $1
-  echo treat $FILE
-
+  # create entry
+  if [ "$DIR" = 1 ]
+  then
+    printf "0 " >>"$OUTPUT"
+    NBL=2
+    MODE="755"
+  else
+    printf "1 " >>"$OUTPUT"
+    NBL=1
+    MODE="644"
+  fi
+  echo "$SIZE $INODE $UDATE $NBL $MODE" >>"$OUTPUT"
+  echo "$PNAME" >>"$OUTPUT"
+  INODE=$(($INODE + 1))
 done <"$FILES"
 
+# adding special files
+cat <<_EOF_ >>"$OUTPUT"
+101 1024 10001 1311861394 1 644
+whattimeisit
+102 1024 10002 1311861394 1 644
+.status
+103 1024 10003 1311861394 1 644
+.info
+104 1024 10004 1311861394 1 644
+.webfs
+105 1024 10005 1311861394 1 644
+.stats
+_EOF_
 
+cp "$OUTPUT" ./temp.metadata
+
+# cleanup stuff
 cleanup

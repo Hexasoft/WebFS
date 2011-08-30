@@ -341,6 +341,35 @@ void tree_set_mode(Node *node, char *mode) {
   node->m_other = tmp[2]-'0';
 }
 
+/* this function parse tree, and validate for dirs that the  number
+   of links is valid (and correct it if needed) */
+int r_tree_update_links(Node *node) {
+  int i, nb = 0;
+  int sum = 0;  /* number of changes */
+  
+  for(i=0; i<node->nb_entries; i++) {
+    if (node->entries[i] != NULL) {
+      if (!node->entries[i]->file) {
+        /* this is a dir. inc nb for local update, and treat dir */
+	nb++;
+	sum += r_tree_update_links(node->entries[i]);
+      }
+    }
+  }
+  /* compare value with computed one */
+  if (node->links != nb + 2) {
+    sum++;
+    /* change the value */
+    node->links = nb+2;
+  }
+  return(sum);
+}
+
+int tree_update_links() {
+  return(r_tree_update_links(&root));
+}
+
+
 /* create tree from FS description (tree must be cleaned)
    returns the number of item created (or <= 0 on error) */
 int tree_create(FILE *f) {
@@ -505,6 +534,9 @@ int tree_create(FILE *f) {
 
     nb++;
   }
+
+  /* update the number of links for dirs */
+  tree_update_links();
 
   return(nb);
 }
