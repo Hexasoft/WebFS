@@ -21,6 +21,10 @@ metadata informations).
 
 I think I (Hexasoft) will work on it (at least in webfs code).
 
+-> Started to work on this. With ftp behavior is mostly stable. Data
+   such as last modification date and size are available. The rest
+   is not available, so will need to be builded with decent value.
+
 
 * Modify code in order to have a separate task for the cache system.
 The goal would be to have a cache system that can receive requests and

@@ -4,6 +4,13 @@
 #  to a apache-http site
 
 
+cat <<_EOF_
+Still problems...
+Don't use for the moment...
+_EOF_
+# '
+exit 1
+
 # usage: $1 base URL
 
 if [ "$1" = "" -o "$2" = "" -o "$1" = "-h" -o "$1" = "--help" ]
