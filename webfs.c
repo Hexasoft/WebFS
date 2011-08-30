@@ -45,7 +45,6 @@ char *url_path;
 /* metadata file on HTTP server */
 char *url_metadata = "/description.data";
 
-
 /* the name of the temp file that contains the
    meta-data of the filesystem. used at startup
    and for updates */
@@ -811,6 +810,7 @@ static void usage(const char* progname)
 "   --metadata <file>   filename on webserver with metadata\n"
 "   --chunks <N>        set number (max) of chunks per cache\n"
 "   --chunksize <size>  set size (int byte) of chunks\n"
+"   --metafile <file>   local filename for metadata (dl or generated)\n"
 "\n", progname);
 }
 
@@ -820,9 +820,10 @@ typedef struct {
   int readahead;   /* allow read-ahead */
   int chunks;      /* number of chunks per cache */
   int chunksize;   /* size (in byte) of a chunk */
+  char *metafile;  /* filename for local metadata file */
 }MyOptions;
 
-MyOptions mo = { NULL, NULL, 0, 0, 0 };
+MyOptions mo = { NULL, NULL, 0, 0, 0, NULL };
 
 
 #define OPTK_READAHEAD 2
@@ -870,6 +871,8 @@ static struct fuse_opt rofs_opts[] = {
     {"chunks=%d", offsetof(MyOptions, chunks), -1},
     {"--chunksise=%d", offsetof(MyOptions, chunksize), -1},
     {"chunksise=%d", offsetof(MyOptions, chunksize), -1},
+    {"--metafile=%s", offsetof(MyOptions, metafile), -1},
+    {"metafile=%s", offsetof(MyOptions, metafile), -1},
     FUSE_OPT_END
 };
 
@@ -929,14 +932,19 @@ int main(int argc, char *argv[])
     }
 
     /* temp file to get the metadata for filesystem */
+    /* does user gives a metafile name? */
     tpl[0] = '\0';
-    strcat(tpl, "/tmp/webfsdesc.XXXXXX");
-    fd = mkstemp(tpl);
-    if (fd < 0) {
-      fprintf(stderr, "Failed to create temporaty file.\n");
-      exit(5);
+    if (mo.metafile != NULL) {
+      strcat(tpl, mo.metafile);
+    } else {
+      strcat(tpl, "/tmp/webfsdesc.XXXXXX");
+      fd = mkstemp(tpl);
+      if (fd < 0) {
+	fprintf(stderr, "Failed to create temporaty file.\n");
+	exit(5);
+      }
+      close(fd); /* we use a FILE, not a fd */
     }
-    close(fd); /* we use a FILE, not a fd */
     /* build URL of metadata */
     metaurl[0] = '\0';
     strcat(metaurl, wget_encode(url_path, url_metadata));
