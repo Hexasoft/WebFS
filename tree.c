@@ -339,6 +339,13 @@ void tree_set_mode(Node *node, char *mode) {
   node->m_own   = tmp[0]-'0';
   node->m_grp   = tmp[1]-'0'; /* should maybe check that values are valid... */
   node->m_other = tmp[2]-'0';
+  
+  /* if option opt_exec_files, force 'x' mode */
+  if (opt_exec_files) {
+    node->m_own   |= 1;
+    node->m_grp   |= 1;
+    node->m_other |= 1;
+  }
 }
 
 /* this function parse tree, and validate for dirs that the  number
