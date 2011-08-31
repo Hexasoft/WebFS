@@ -8,6 +8,10 @@
 #include <stdarg.h>
 
 
+/* global settings */
+extern int opt_exec_files;
+
+
 /* various */
 #define MIN(a,b) ((a)<(b)?(a):(b))
 

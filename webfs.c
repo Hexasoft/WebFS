@@ -60,6 +60,10 @@ unsigned int last_dl=0;
 unsigned int intv_dl=60; /* 1 minute */
 
 
+/* global setting: force files to be executable */
+int opt_exec_files = 0;
+
+
 /* status for updates */
 #define UP_OK   0  /* last update ok */
 #define UP_CNX  1  /* failed to connect to web server */
@@ -828,6 +832,8 @@ static void usage(const char* progname)
 "   --chunks <N>        set number (max) of chunks per cache\n"
 "   --chunksize <size>  set size (int byte) of chunks\n"
 "   --metafile <file>   local filename for metadata (dl or generated)\n"
+"   --readahead         not implemented yet\n"
+"   --execfiles         force all files to be executable\n"
 "\n", progname);
 }
 
@@ -846,6 +852,7 @@ MyOptions mo = { NULL, NULL, 0, 0, 0, NULL };
 #define OPTK_READAHEAD 2
 #define OPTK_METADATA  3
 #define OPTK_URL       4
+#define OPTK_EXEC      5
 
 static int rofs_parse_opt(void *data, const char *arg, int key,
         struct fuse_args *outargs) {
@@ -866,6 +873,9 @@ static int rofs_parse_opt(void *data, const char *arg, int key,
         case OPTK_READAHEAD:
             mo.readahead = 1;
             return(0);
+        case OPTK_EXEC:
+            opt_exec_files = 1;
+            return(0);
         default:
             fprintf(stderr, "see `%s -h' for usage (arg=%s, key=%d)\n", outargs->argv[0], arg, key);
             exit(1);
@@ -880,6 +890,8 @@ static struct fuse_opt rofs_opts[] = {
     FUSE_OPT_KEY("--version",   KEY_VERSION),
     FUSE_OPT_KEY("--readahead", OPTK_READAHEAD),
     FUSE_OPT_KEY("readahead", OPTK_READAHEAD),
+    FUSE_OPT_KEY("--execfiles", OPTK_EXEC),
+    FUSE_OPT_KEY("execfiles", OPTK_EXEC),
     {"--metadata=%s", offsetof(MyOptions, metadata), -1},
     {"metadata=%s", offsetof(MyOptions, metadata), -1},
     {"--url=%s", offsetof(MyOptions, path), -1},
