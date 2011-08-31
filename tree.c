@@ -411,7 +411,7 @@ int tree_create(FILE *f) {
   }
   if (name[strlen(name)-1] == '\n')
     name[strlen(name)-1] = '\0';
-  //printf("# read: %d %u %u %u %u %s %s\n", file, inode, size, stamp, links, mode, name);
+printf("# read: %d %u %u %u %u %s %s\n", file, inode, size, stamp, links, mode, name);
 
   root.parent = &root;
   root.m_own = 7;

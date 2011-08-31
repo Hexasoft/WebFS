@@ -48,7 +48,7 @@ char *url_metadata = "/description.data";
 /* the name of the temp file that contains the
    meta-data of the filesystem. used at startup
    and for updates */
-char tpl[64];
+char tpl[4096];
 /* URL where to find metadata file on server */
 char metaurl[4096];
 
@@ -113,14 +113,18 @@ int load_metadata() {
   FILE *f;
   unsigned int stp;
 mylog("::load_metadata()\n");
-  f = fopen(tpl, "w");
-  if (f == NULL) {
-    update_ok = UP_INT;
-    set_message("Failed to create local metadata file (check /tmp).");
-    return(0);
+  if (metaurl[0] != '@') {
+    /* not for @ code: it is not updated */
+    f = fopen(tpl, "w");
+    if (f == NULL) {
+      update_ok = UP_INT;
+      set_message("Failed to create local metadata file (check /tmp).");
+      return(0);
+    }
   }
   
   if (metaurl[0] == '@') {
+printf("in @... calling '%s'\n", metaurl+1);
     /* user ask for a local program to update file */
     /* run it with "system". may change */
     if (system(metaurl+1) != 0) {
@@ -128,6 +132,7 @@ mylog("::load_metadata()\n");
       set_message("Failed to execute updater program for metadata.");
       return(0);
     }
+    return(1);
   } else {
     /* we just dl the metadata file from website */
     if (!wget_meta(metaurl, f)) {
@@ -912,11 +917,13 @@ int main(int argc, char *argv[])
         fprintf(stderr, "see `%s -h' for usage\n", argv[0]);
         exit(1);
     }
+
     /* copy args in local */
     if (mo.path == NULL) {
         fprintf(stderr, "Missing URL. See -h for help.\n");
         exit(1);
     }
+
     /* if mo.metadata == NULL, keep default value */
     url_path = strdup(mo.path);
     if (mo.metadata != NULL)
@@ -925,6 +932,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Internal error while copying options. Abort.\n");
         exit(1);
     }
+
     if ((mo.chunks > 0)&&(mo.chunks <= CACHE_MAX_CHUNK)) {
       cache_chunks = mo.chunks;
     } else {
@@ -934,12 +942,13 @@ int main(int argc, char *argv[])
 	exit(1);
       }
     }
+
     if (mo.chunksize >= 512) {
       cache_chunksize = mo.chunksize;
     } else {
       if (mo.chunksize > 0) {
         fprintf(stderr, "Chunk size '%d' too small (min: 512).\n", mo.chunksize);
-	exit(1);
+ 	exit(1);
       }
     }
 
@@ -967,6 +976,7 @@ int main(int argc, char *argv[])
       }
       close(fd); /* we use a FILE, not a fd */
     }
+    
     /* build URL of metadata */
     metaurl[0] = '\0';
     /* special case: if url_metadata starts by @ it is the
@@ -975,7 +985,6 @@ int main(int argc, char *argv[])
       strcat(metaurl, url_metadata);
     } else {
       strcat(metaurl, wget_encode(url_path, url_metadata));
-printf("### metaurl='%s'\n", metaurl);
     }
     if (!load_metadata()) {
       fprintf(stderr, "Failed to download metadata file.\n");
@@ -1012,7 +1021,8 @@ printf("### metaurl='%s'\n", metaurl);
     wget_fini();
     
     /* remove temp file */
-    unlink((const char *)tpl);
+    if (url_metadata[0] != '@') /* do not remove in this case */
+      unlink((const char *)tpl);
     
     return(0);
 }

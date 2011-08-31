@@ -162,7 +162,7 @@ do
     MODE="644"
   fi
   echo "$SIZE $INODE $UDATE $NBL $MODE" >>"$OUTPUT"
-  echo "$PNAME" >>"$OUTPUT"
+  echo "$PNAME" | sed -e "s,^/,," >>"$OUTPUT"
   INODE=$(($INODE + 1))
 done <"$FILES"
 

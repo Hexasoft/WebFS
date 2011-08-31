@@ -4,7 +4,7 @@ BIN=webfs
 SOURCE="webfs.c tree.c tools.c cache.c webget.c"
 
 compil() {
-  CMD="gcc -D_FILE_OFFSET_BITS=64 -O2 -Wall -o $BIN $SOURCE -lfuse -lcurl"
+  CMD="gcc -g -D_FILE_OFFSET_BITS=64 -O2 -Wall -o $BIN $SOURCE -lfuse -lcurl"
   
   echo "Exec: $CMD"
   $CMD
