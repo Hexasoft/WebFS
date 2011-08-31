@@ -128,7 +128,6 @@ mylog("::load_metadata()\n");
   }
   
   if (metaurl[0] == '@') {
-printf("in @... calling '%s'\n", metaurl+1);
     /* user ask for a local program to update file */
     /* run it with "system". may change */
     if (system(metaurl+1) != 0) {

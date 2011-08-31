@@ -13,9 +13,30 @@ Option "-r" is for "read-only". This option is not necessary, as
   readonly is handled by webfs, but it is better to catch "readonly"
   at lower level.
 
-Option "--metadata <file>" allows to set a different name for the
+Option "--metadata=<file>" allows to set a different name for the
   metadata file on server. Default value is /description.data (please
   note the /).
+  If metadata option starts with a '@', webfs will consider the rest of
+  the string as a command to execute. This command is supposed to update
+  the local metadata file, and so webfs will not try to download anything.
+  If '@' is used, 'metafile' *must* be used.
+
+Option "--metafile=<file>" allows to set the name of the local file used
+  by webfs to store the metadata informations. By default webfs uses
+  a temporary file with the format '/tmp/webfs.XXXXXX'. This option can
+  be used if /tmp is not suitable for that purpose, or with option
+  'metadata="@<command>"'.
+  If used, webfs will not delete this file (as it does with its default
+  file in /tmp).
+
+Other options:
+  --readahead   activates readahead feature. Not implemented yet
+  --execfiles   force executable flag for every files. This can be
+    useful if the filesystem contains executable programs, but the
+    website does not exports metadata (so metadata are generated from
+    outside using http/ftp requests, which are not able to get filemode
+    informations).
+
 
 To unmount filesystem, use 'fusermount -u mountpoint'.
 
